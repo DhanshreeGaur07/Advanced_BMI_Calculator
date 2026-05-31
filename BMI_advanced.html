@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BMI Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f5f2ee;
+            --surface: #ffffff;
+            --surface2: #f0ede8;
+            --border: rgba(0, 0, 0, 0.1);
+            --border2: rgba(0, 0, 0, 0.18);
+            --text: #1a1816;
+            --muted: #6b6560;
+            --hint: #a09890;
+            --accent: #2c5f4a;
+            --accent-lt: #e6f0ec;
+            --danger: #9b2c2c;
+            --danger-lt: #fce8e8;
+            --warn: #7a4f10;
+            --warn-lt: #fdf0dc;
+            --info: #1a4a7a;
+            --info-lt: #e6eef8;
+            --radius: 14px;
+            --radius-sm: 8px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #141210;
+                --surface: #1e1c19;
+                --surface2: #272420;
+                --border: rgba(255, 255, 255, 0.1);
+                --border2: rgba(255, 255, 255, 0.18);
+                --text: #f0ece6;
+                --muted: #9a9088;
+                --hint: #6b6360;
+                --accent: #6dbf97;
+                --accent-lt: #0d2b20;
+                --danger: #f08080;
+                --danger-lt: #2b1212;
+                --warn: #e8b04a;
+                --warn-lt: #2a1e08;
+                --info: #7ab4f0;
+                --info-lt: #0d1e30;
+            }
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* ── Header ── */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header .logo {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header .logo svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+
+        header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.35rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        header span {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--muted);
+            background: var(--surface2);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* ── Layout ── */
+        .wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 1.75rem;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 7px;
+            transition: all .2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .tab.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text);
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeIn .2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Two-column grid ── */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .75rem;
+        }
+
+        .grid4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .75rem;
+        }
+
+        @media (max-width: 540px) {
+
+            .grid2,
+            .grid3,
+            .grid4 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            header {
+                padding: 1rem;
+            }
+
+            .wrapper {
+                padding: 1rem;
+            }
+        }
+
+        /* ── Unit toggle ── */
+        .unit-toggle {
+            display: flex;
+            border: 1px solid var(--border2);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+
+        .unit-btn {
+            flex: 1;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            transition: .15s;
+        }
+
+        .unit-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .unit-btn:not(.active):hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        /* ── Form fields ── */
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 6px;
+            letter-spacing: .03em;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border2);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--accent);
+        }
+
+        .field input::placeholder {
+            color: var(--hint);
+        }
+
+        /* ── Error ── */
+        .error-msg {
+            font-size: 12px;
+            color: var(--danger);
+            min-height: 16px;
+            margin-bottom: .5rem;
+        }
+
+        /* ── Primary button ── */
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: opacity .15s, transform .1s;
+        }
+
+        .btn-primary:hover {
+            opacity: .88;
+        }
+
+        .btn-primary:active {
+            transform: scale(.98);
+        }
+
+        .btn-ghost {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            margin-top: .75rem;
+            transition: background .15s;
+        }
+
+        .btn-ghost:hover {
+            background: var(--accent-lt);
+        }
+
+        /* ── Metric cards ── */
+        .metric {
+            background: var(--surface2);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .metric-val {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .metric-val.large {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+        }
+
+        /* ── BMI result section ── */
+        #result-card {
+            display: none;
+        }
+
+        .bmi-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .bmi-number {
+            font-family: 'DM Serif Display', serif;
+            font-size: 5rem;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .bmi-info {
+            text-align: left;
+        }
+
+        .bmi-category {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .bmi-ideal {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ── Color scale bar ── */
+        .scale-wrap {
+            margin: 1.25rem 0 .5rem;
+        }
+
+        .scale-bar {
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(to right, #64b5f6 0%, #81c784 22%, #ffb74d 35%, #e57373 55%, #c62828 100%);
+            position: relative;
+        }
+
+        .scale-pointer {
+            position: absolute;
+            top: -5px;
+            width: 24px;
+            height: 24px;
+            background: var(--surface);
+            border: 2px solid var(--text);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            transition: left .5s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--hint);
+            margin-top: 8px;
+        }
+
+        /* ── Advice box ── */
+        .advice-box {
+            background: var(--accent-lt);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: .75rem 1rem;
+            font-size: 13px;
+            color: var(--text);
+            margin-top: 1rem;
+            line-height: 1.6;
+        }
+
+        /* ── Save feedback ── */
+        .save-feedback {
+            font-size: 12px;
+            color: var(--accent);
+            min-height: 16px;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* ── History ── */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .history-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .btn-danger-text {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--danger);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-danger-text:hover {
+            text-decoration: underline;
+        }
+
+        .history-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-entry:last-child {
+            border-bottom: none;
+        }
+
+        .history-left .name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .history-left .meta {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .history-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-bmi {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'DM Serif Display', serif;
+        }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-under {
+            background: var(--info-lt);
+            color: var(--info);
+        }
+
+        .badge-normal {
+            background: var(--accent-lt);
+            color: var(--accent);
+        }
+
+        .badge-over {
+            background: var(--warn-lt);
+            color: var(--warn);
+        }
+
+        .badge-obese {
+            background: var(--danger-lt);
+            color: var(--danger);
+        }
+
+        .btn-del {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--hint);
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 4px;
+            line-height: 1;
+            transition: background .15s, color .15s;
+        }
+
+        .btn-del:hover {
+            background: var(--danger-lt);
+            color: var(--danger);
+        }
+
+        /* ── Trends ── */
+        .trend-arrow {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        #chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            margin-top: .5rem;
+        }
+
+        /* ── Empty state ── */
+        .empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--hint);
+            font-size: 14px;
+        }
+
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: .75rem;
+        }
+
+        /* ── BMI reference table ── */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .ref-table th {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ref-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ref-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ref-table tr:hover td {
+            background: var(--surface2);
+        }
+
+        /* ── Footer ── */
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: var(--hint);
+            margin-top: 2rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L12 22M7 7C7 7 9 10 12 10C15 10 17 7 17 7M7 17C7 17 9 14 12 14C15 14 17 17 17 17"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </div>
+        <h1>BMI Calculator</h1>
+        <span>Health Tracker</span>
+    </header>
+
+    <div class="wrapper">
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('calc')">Calculator</button>
+            <button class="tab" onclick="switchTab('history')">History</button>
+            <button class="tab" onclick="switchTab('trends')">Trends</button>
+            <button class="tab" onclick="switchTab('about')">Reference</button>
+        </div>
+
+        <!-- ══════════════════ CALCULATOR ══════════════════ -->
+        <div id="panel-calc" class="panel active">
+            <div class="grid2" style="align-items:start">
+
+                <!-- Input card -->
+                <div>
+                    <div class="card">
+                        <div class="card-title">Your Details</div>
+
+                        <div class="unit-toggle">
+                            <button class="unit-btn active" id="btn-metric" onclick="setUnit('metric')">Metric</button>
+                            <button class="unit-btn" id="btn-imperial" onclick="setUnit('imperial')">Imperial</button>
+                        </div>
+
+                        <div class="field">
+                            <label>Name (optional)</label>
+                            <input type="text" id="inp-name" placeholder="e.g. Rahul" maxlength="40" />
+                        </div>
+
+                        <!-- Metric inputs -->
+                        <div id="metric-inputs">
+                            <div class="field">
+                                <label>Weight (kg)</label>
+                                <input type="number" id="inp-weight-kg" placeholder="70" min="10" max="500"
+                                    step="0.1" />
+                            </div>
+                            <div class="field">
+                                <label>Height (m)</label>
+                                <input type="number" id="inp-height-m" placeholder="1.75" min="0.5" max="2.7"
+                                    step="0.01" />
+                            </div>
+                        </div>
+
+                        <!-- Imperial inputs -->
+                        <div id="imperial-inputs" style="display:none">
+                            <div class="field">
+                                <label>Weight (lbs)</label>
+                                <input type="number" id="inp-weight-lb" placeholder="154" min="22" max="1100"
+                                    step="0.5" />
+                            </div>
+                            <div class="grid2">
+                                <div class="field">
+                                    <label>Height (feet)</label>
+                                    <input type="number" id="inp-height-ft" placeholder="5" min="1" max="9" step="1" />
+                                </div>
+                                <div class="field">
+                                    <label>Height (inches)</label>
+                                    <input type="number" id="inp-height-in" placeholder="9" min="0" max="11" step="1" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="error-msg" id="err-msg"></div>
+                        <button class="btn-primary" onclick="calculate()">Calculate BMI</button>
+                    </div>
+                </div>
+
+                <!-- Result card -->
+                <div id="result-card" class="card">
+                    <div class="card-title">Your Result</div>
+
+                    <div class="bmi-display">
+                        <div class="bmi-number" id="res-bmi-number">—</div>
+                        <div class="bmi-info">
+                            <div class="bmi-category" id="res-category">—</div>
+                            <div class="bmi-ideal" id="res-ideal">—</div>
+                        </div>
+                    </div>
+
+                    <div class="scale-wrap">
+                        <div class="scale-bar">
+                            <div class="scale-pointer" id="scale-ptr" style="left: 0%"></div>
+                        </div>
+                        <div class="scale-labels">
+                            <span>Underweight<br />&lt;18.5</span>
+                            <span style="text-align:center">Normal<br />18.5–24.9</span>
+                            <span style="text-align:center">Overweight<br />25–29.9</span>
+                            <span style="text-align:right">Obese<br />≥30</span>
+                        </div>
+                    </div>
+
+                    <div class="advice-box" id="res-advice">—</div>
+
+                    <button class="btn-ghost" onclick="saveEntry()">+ Save to History</button>
+                    <div class="save-feedback" id="save-feedback"></div>
+                </div>
+
+                <!-- Placeholder when result not yet shown -->
+                <div id="result-placeholder" class="card"
+                    style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--hint);text-align:center;">
+                    <div>
+                        <div style="font-size:2rem;margin-bottom:.5rem">📊</div>
+                        <div style="font-size:13px">Your result will appear here</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ══════════════════ HISTORY ══════════════════ -->
+        <div id="panel-history" class="panel">
+            <div class="card">
+                <div class="history-header">
+                    <h2>Saved Entries</h2>
+                    <button class="btn-danger-text" onclick="clearAll()">Clear all</button>
+                </div>
+                <div id="history-list"></div>
+            </div>
+        </div>
+
+        <!-- ══════════════════ TRENDS ══════════════════ -->
+        <div id="panel-trends" class="panel">
+            <div class="grid4" style="margin-bottom:1rem">
+                <div class="metric">
+                    <div class="metric-label">Latest</div>
+                    <div class="metric-val" id="t-latest">—</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Average</div>
+                    <div class="metric-val" id="t-avg">—</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Lowest</div>
+                    <div class="metric-val" id="t-min">—</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Highest</div>
+                    <div class="metric-val" id="t-max">—</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">BMI Over Time</div>
+                <div id="chart-container">
+                    <canvas id="trend-chart" role="img" aria-label="BMI trend line chart over time"></canvas>
+                </div>
+                <div class="trend-arrow" id="trend-note"></div>
+            </div>
+            <div id="trends-empty" class="empty" style="display:none">
+                <div class="empty-icon">📈</div>
+                Save at least two entries to see your trend.
+            </div>
+        </div>
+
+        <!-- ══════════════════ REFERENCE ══════════════════ -->
+        <div id="panel-about" class="panel">
+            <div class="grid2" style="align-items:start">
+                <div class="card">
+                    <div class="card-title">BMI Categories (WHO)</div>
+                    <table class="ref-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>BMI Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-under">Underweight</span></td>
+                                <td>&lt; 18.5</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-normal">Normal weight</span></td>
+                                <td>18.5 – 24.9</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-over">Overweight</span></td>
+                                <td>25.0 – 29.9</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-obese">Obese Class I</span></td>
+                                <td>30.0 – 34.9</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-obese">Obese Class II</span></td>
+                                <td>35.0 – 39.9</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-obese">Obese Class III</span></td>
+                                <td>≥ 40.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-title">The BMI Formula</div>
+                    <div style="font-size:13px;line-height:1.8;color:var(--text)">
+                        <p style="margin-bottom:.75rem"><strong>Metric:</strong></p>
+                        <div
+                            style="font-family:monospace;background:var(--surface2);padding:.75rem;border-radius:6px;margin-bottom:1rem;font-size:14px">
+                            BMI = weight(kg) ÷ height(m)²
+                        </div>
+                        <p style="margin-bottom:.75rem"><strong>Imperial:</strong></p>
+                        <div
+                            style="font-family:monospace;background:var(--surface2);padding:.75rem;border-radius:6px;margin-bottom:1rem;font-size:14px">
+                            BMI = 703 × weight(lb) ÷ height(in)²
+                        </div>
+                        <p style="color:var(--muted);font-size:12px;line-height:1.7">
+                            BMI is a screening tool, not a diagnostic measure. It does not account for age, sex,
+                            ethnicity, or muscle mass. Always consult a healthcare professional for a complete health
+                            assessment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="footer-note">BMI is for screening purposes only. Not a substitute for medical advice.<br />Data is
+            stored locally in your browser only.</p>
+
+    </div>
+
+    <script>
+        /* ─── State ─── */
+        let currentUnit = 'metric';
+        let lastResult = null;
+        let trendChartInstance = null;
+        const STORAGE_KEY = 'bmi_app_history_v2';
+
+        /* ─── Storage ─── */
+        function getHistory() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+        }
+        function setHistory(arr) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch { }
+        }
+
+        /* ─── Tab switching ─── */
+        function switchTab(t) {
+            ['calc', 'history', 'trends', 'about'].forEach((id, i) => {
+                document.querySelectorAll('.tab')[i].classList.toggle('active', id === t);
+                document.getElementById('panel-' + id).classList.toggle('active', id === t);
+            });
+            if (t === 'history') renderHistory();
+            if (t === 'trends') renderTrends();
+        }
+
+        /* ─── Unit toggle ─── */
+        function setUnit(u) {
+            currentUnit = u;
+            document.getElementById('btn-metric').classList.toggle('active', u === 'metric');
+            document.getElementById('btn-imperial').classList.toggle('active', u === 'imperial');
+            document.getElementById('metric-inputs').style.display = u === 'metric' ? '' : 'none';
+            document.getElementById('imperial-inputs').style.display = u === 'imperial' ? '' : 'none';
+            hideResult();
+        }
+
+        function hideResult() {
+            document.getElementById('result-card').style.display = 'none';
+            document.getElementById('result-placeholder').style.display = '';
+            document.getElementById('save-feedback').textContent = '';
+            document.getElementById('err-msg').textContent = '';
+        }
+
+        /* ─── Inputs → metric ─── */
+        function getWeightKg() {
+            if (currentUnit === 'metric') {
+                const v = parseFloat(document.getElementById('inp-weight-kg').value);
+                return isNaN(v) ? null : v;
+            } else {
+                const v = parseFloat(document.getElementById('inp-weight-lb').value);
+                return isNaN(v) ? null : v * 0.453592;
+            }
+        }
+        function getHeightM() {
+            if (currentUnit === 'metric') {
+                const v = parseFloat(document.getElementById('inp-height-m').value);
+                return isNaN(v) ? null : v;
+            } else {
+                const ft = parseFloat(document.getElementById('inp-height-ft').value) || 0;
+                const inc = parseFloat(document.getElementById('inp-height-in').value) || 0;
+                const total = ft * 12 + inc;
+                return total <= 0 ? null : total * 0.0254;
+            }
+        }
+
+        /* ─── Classify ─── */
+        function classify(bmi) {
+            if (bmi < 18.5) return {
+                cat: 'Underweight', badgeCls: 'badge-under',
+                advice: 'A BMI below 18.5 may indicate insufficient nutrition or underlying health issues. Consider consulting a nutritionist or doctor.',
+                pct: Math.max(1, (bmi / 18.5) * 20)
+            };
+            if (bmi < 25) return {
+                cat: 'Normal weight', badgeCls: 'badge-normal',
+                advice: 'Your BMI is in the healthy range. Maintain it with a balanced diet, regular physical activity, and adequate sleep.',
+                pct: 20 + ((bmi - 18.5) / 6.4) * 20
+            };
+            if (bmi < 30) return {
+                cat: 'Overweight', badgeCls: 'badge-over',
+                advice: 'A BMI of 25–29.9 suggests slightly above-ideal weight. Regular moderate exercise and mindful eating can help.',
+                pct: 40 + ((bmi - 25) / 5) * 20
+            };
+            return {
+                cat: 'Obese', badgeCls: 'badge-obese',
+                advice: 'A BMI ≥ 30 is linked with increased risk of diabetes, heart disease, and other conditions. Please consult a healthcare professional.',
+                pct: Math.min(97, 60 + ((bmi - 30) / 20) * 37)
+            };
+        }
+
+        /* ─── Calculate ─── */
+        function calculate() {
+            const err = document.getElementById('err-msg');
+            const wKg = getWeightKg();
+            const hM = getHeightM();
+
+            if (!wKg) { err.textContent = 'Please enter a valid weight.'; return; }
+            if (!hM) { err.textContent = 'Please enter a valid height.'; return; }
+            if (wKg < 10 || wKg > 500) { err.textContent = 'Weight out of range (10–500 kg).'; return; }
+            if (hM < 0.5 || hM > 2.7) { err.textContent = 'Height out of range (0.5–2.7 m).'; return; }
+            err.textContent = '';
+
+            const bmi = wKg / (hM * hM);
+            const info = classify(bmi);
+
+            // Ideal weight range
+            const minW = 18.5 * hM * hM, maxW = 24.9 * hM * hM;
+            const idealStr = currentUnit === 'imperial'
+                ? `Ideal: ${(minW / 0.453592).toFixed(0)}–${(maxW / 0.453592).toFixed(0)} lbs`
+                : `Ideal: ${minW.toFixed(1)}–${maxW.toFixed(1)} kg`;
+
+            document.getElementById('res-bmi-number').textContent = bmi.toFixed(1);
+            document.getElementById('res-category').innerHTML = `<span class="badge ${info.badgeCls}">${info.cat}</span>`;
+            document.getElementById('res-ideal').textContent = idealStr;
+            document.getElementById('res-advice').textContent = info.advice;
+            document.getElementById('scale-ptr').style.left = info.pct + '%';
+            document.getElementById('save-feedback').textContent = '';
+
+            document.getElementById('result-placeholder').style.display = 'none';
+            document.getElementById('result-card').style.display = 'block';
+
+            lastResult = { bmi: parseFloat(bmi.toFixed(1)), weightKg: parseFloat(wKg.toFixed(1)), unit: currentUnit };
+        }
+
+        /* ─── Save entry ─── */
+        function saveEntry() {
+            if (!lastResult) return;
+            const history = getHistory();
+            history.push({
+                ts: Date.now(),
+                date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                name: document.getElementById('inp-name').value.trim() || '—',
+                bmi: lastResult.bmi,
+                weightKg: lastResult.weightKg,
+                unit: lastResult.unit
+            });
+            setHistory(history);
+            document.getElementById('save-feedback').textContent = '✓ Saved successfully';
+        }
+
+        /* ─── Render history ─── */
+        function renderHistory() {
+            const h = getHistory();
+            const el = document.getElementById('history-list');
+            if (!h.length) {
+                el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>No entries saved yet. Calculate your BMI and tap "Save to History".</div>`;
+                return;
+            }
+            el.innerHTML = [...h].reverse().map((e, ri) => {
+                const realIdx = h.length - 1 - ri;
+                const info = classify(e.bmi);
+                const wStr = e.unit === 'imperial'
+                    ? `${(e.weightKg / 0.453592).toFixed(0)} lbs`
+                    : `${e.weightKg} kg`;
+                return `<div class="history-entry">
+      <div class="history-left">
+        <div class="name">${e.name !== '—' ? e.name : 'Entry'} &mdash; ${e.date}</div>
+        <div class="meta">${wStr}</div>
+      </div>
+      <div class="history-right">
+        <span class="history-bmi">${e.bmi}</span>
+        <span class="badge ${info.badgeCls}">${info.cat}</span>
+        <button class="btn-del" onclick="deleteEntry(${realIdx})" title="Delete">✕</button>
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        function deleteEntry(idx) {
+            const h = getHistory();
+            h.splice(idx, 1);
+            setHistory(h);
+            renderHistory();
+        }
+
+        function clearAll() {
+            if (confirm('Delete all saved entries?')) {
+                setHistory([]);
+                renderHistory();
+            }
+        }
+
+        /* ─── Render trends ─── */
+        function renderTrends() {
+            const h = getHistory();
+            const empty = document.getElementById('trends-empty');
+
+            if (h.length < 2) {
+                ['t-latest', 't-avg', 't-min', 't-max'].forEach(id => document.getElementById(id).textContent = '—');
+                document.getElementById('chart-container').style.display = 'none';
+                empty.style.display = 'block';
+                document.getElementById('trend-note').textContent = '';
+                return;
+            }
+
+            empty.style.display = 'none';
+            document.getElementById('chart-container').style.display = 'block';
+
+            const vals = h.map(e => e.bmi);
+            const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+            document.getElementById('t-latest').textContent = vals[vals.length - 1].toFixed(1);
+            document.getElementById('t-avg').textContent = avg.toFixed(1);
+            document.getElementById('t-min').textContent = Math.min(...vals).toFixed(1);
+            document.getElementById('t-max').textContent = Math.max(...vals).toFixed(1);
+
+            const diff = vals[vals.length - 1] - vals[0];
+            const note = diff > 0
+                ? `↑ BMI increased by ${Math.abs(diff).toFixed(1)} since first entry`
+                : `↓ BMI decreased by ${Math.abs(diff).toFixed(1)} since first entry`;
+            document.getElementById('trend-note').textContent = note;
+
+            const labels = h.map(e => e.date);
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+            const tickColor = isDark ? '#9a9088' : '#6b6560';
+            const lineColor = isDark ? '#6dbf97' : '#2c5f4a';
+            const fillColor = isDark ? 'rgba(109,191,151,0.1)' : 'rgba(44,95,74,0.08)';
+            const normalColor = isDark ? 'rgba(109,191,151,0.45)' : 'rgba(44,95,74,0.45)';
+
+            if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
+
+            trendChartInstance = new Chart(document.getElementById('trend-chart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Your BMI',
+                            data: vals,
+                            borderColor: lineColor,
+                            backgroundColor: fillColor,
+                            pointBackgroundColor: lineColor,
+                            pointRadius: 5, pointHoverRadius: 7,
+                            borderWidth: 2.5, fill: true, tension: 0.35
+                        },
+                        {
+                            label: 'Healthy max (24.9)',
+                            data: Array(vals.length).fill(24.9),
+                            borderColor: normalColor, borderDash: [6, 4],
+                            borderWidth: 1.5, pointRadius: 0, fill: false
+                        },
+                        {
+                            label: 'Healthy min (18.5)',
+                            data: Array(vals.length).fill(18.5),
+                            borderColor: normalColor, borderDash: [6, 4],
+                            borderWidth: 1.5, pointRadius: 0, fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label === 'Your BMI'
+                                    ? `BMI: ${ctx.parsed.y.toFixed(1)} — ${classify(ctx.parsed.y).cat}`
+                                    : ctx.dataset.label
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: Math.max(10, Math.min(...vals) - 3),
+                            max: Math.min(45, Math.max(...vals) + 3),
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: tickColor, font: { size: 11 }, maxRotation: 40, autoSkip: false }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
